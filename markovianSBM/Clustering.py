@@ -4,6 +4,7 @@ import numpy as np
 import os
 
 
+
 class Clustering:
     def __init__(self, n, K):
         self.n = n
@@ -146,38 +147,39 @@ class Clustering:
           
         self.clusters_approx = []
         for i in range(self.n):
-          for j in range(self.K):
-            if self.A[i,j]==1:
-              self.clusters_approx.append(j)
+            for j in range(self.K):
+                if self.A[i,j]==1:
+                    self.clusters_approx.append(j)
 
         self.true_partition   = self.build_partition(self.clusters)
         approx_partition = self.build_partition(self.clusters_approx) 
         self.find_permutation(self.true_partition, approx_partition)
         self.approx_partition = {}
         for k in range(self.K):
-          self.approx_partition[k] = approx_partition[self.permutation[k]]
+            self.approx_partition[k] = approx_partition[self.permutation[k]]
         clusts_approx = np.copy(self.clusters_approx)
         for i,group in enumerate(clusts_approx):
-          self.clusters_approx[i] = self.permutation[group]
+            self.clusters_approx[i] = self.permutation[group]
 
     def build_partition(self, clust):
-      d = {i:{} for i in range(self.K)}
-      for i in range(len(clust)):
-          d[clust[i]] = {i}
-      return (d)
+        d = {i:set() for i in range(self.K)}
+        for i in range(len(clust)):
+            d[clust[i]].add(i)
+        return (d)
 
     def find_permutation(self, true_partition, approx_partition):
-      import itertools
-      permus = list(itertools.permutations([i for i in range(self.K)]))
-      best_error = np.float('inf')
-      for permu in permus:
-        error = 0
-        for k in range(self.K):
-          try:
-            error += len(true_partition[k]-approx_partition[permu[k]])
-          except:
-            error += len(true_partition[k])
-        if error < best_error:
-          best_error = error
-          self.permutation = permu
+        import itertools
+        permus = list(itertools.permutations([i for i in range(self.K)]))
+        best_error = np.float('inf')
+        for permu in permus:
+            error = 0
+            for k in range(self.K):
+                try:
+                    error += len(true_partition[k]-approx_partition[permu[k]])
+                except:
+                    error += len(true_partition[k])
+            if error < best_error:
+                best_error = error
+                self.permutation = permu
+
 
