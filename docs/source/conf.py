@@ -43,7 +43,12 @@ sys.path.insert(0, _pysrc)
 # ]
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
+import numpy 
+import cvxpy
+import matplotlib
+import matplotlib.pyplot
 import markovianSBM
+
 # -- Project information -----------------------------------------------------
 
 project = 'Markovian-SBM'
