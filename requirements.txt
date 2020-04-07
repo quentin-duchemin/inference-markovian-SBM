@@ -1,0 +1,5 @@
+# List of Python modules required to run my simulations
+numpy             # Required for numpy arrays and functions
+matplotlib
+os
+cvxpy

@@ -26,27 +26,7 @@ _pysrc = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
 # Insert it into the path.
 sys.path.insert(0, _pysrc)
 
-# from unittest.mock import MagicMock
 
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#         return MagicMock()
-
-
-# MOCK_MODULES = [
-#     'numpy',
-#     'matplotlib',
-#     'matplotlib.pyplot',
-#     'cvxpy',
-#     'os'    
-# ]
-# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-import numpy 
-import cvxpy
-import matplotlib
-import matplotlib.pyplot
 import markovianSBM
 
 # -- Project information -----------------------------------------------------
