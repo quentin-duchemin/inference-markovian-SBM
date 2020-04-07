@@ -21,6 +21,11 @@ _pysrc = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..
 sys.path.insert(0, _pysrc)
 
 
+_pysrc = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+
+# Insert it into the path.
+sys.path.insert(0, _pysrc)
+
 # -- Project information -----------------------------------------------------
 
 project = 'Markovian-SBM'
