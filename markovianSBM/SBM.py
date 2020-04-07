@@ -4,9 +4,13 @@ import os
 import matplotlib.pyplot as plt
 from .Clustering import Clustering
 from .Estimation import Estimation
+from .RelaxedKmeans import RelaxedKmeans
 
-class SBM(Clustering, Estimation):
+
+class SBM(RelaxedKmeans, Clustering, Estimation):
+    """Main class building the graph and running the algorithm to recover communities."""
     def __init__(self, n, K, ini_distribution='uniform', framework='iid', Q=None, P=None):
+        RelaxedKmeans.__init__(self)
         Clustering.__init__(self, n, K) 
         Estimation.__init__(self)
         self.fw = framework
@@ -23,6 +27,7 @@ class SBM(Clustering, Estimation):
         self.adjacency_matrix()
         
     def edges_matrix(self, Q):
+        """Builds the connectivity matrix Q."""
         if Q is None:
             a = np.random.rand(self.K, self.K)
             self.Q = np.tril(a) + np.tril(a, -1).T
@@ -30,10 +35,12 @@ class SBM(Clustering, Estimation):
             self.Q = Q
             
     def initial_distribution(self):
+        """Defines the distribution of the community of the first node of the graph."""
         if self.ini_distribution == 'uniform':
             return np.random.randint(0,self.K)
             
     def generate_clusters(self, P):
+        """Samples the communities of the nodes."""
         if self.fw == 'iid':
             self.clusters = np.random.randint(0,self.K,self.n)
         if self.fw == 'markov':
@@ -48,6 +55,7 @@ class SBM(Clustering, Estimation):
             self.clusters = clusters
 
     def effectif_clusters(self):
+        """Computes the sizes of each clusters"""
         self.effectifs = np.zeros(self.K)
         for node in range(self.n):
             self.effectifs[self.clusters[node]] += 1
@@ -59,6 +67,7 @@ class SBM(Clustering, Estimation):
                     self.B[i,j] = 1/self.effectifs[self.clusters[i]]
             
     def next_state(self, i):
+        """Method used to sample the community of the next code knowing that the community of the previous node was i."""
         a = np.cumsum(self.P[i,:])
         u = np.random.rand()
         state = 0
@@ -69,6 +78,7 @@ class SBM(Clustering, Estimation):
         return state
     
     def bernoulli(self, q):
+        """Bernoulli distribution."""
         u = np.random.rand()
         if u < q:
             return 1
@@ -76,45 +86,23 @@ class SBM(Clustering, Estimation):
             return 0
 
     def adjacency_matrix(self):
+        """Builds the adjacency matrix of the graph."""
         X = np.zeros((self.n,self.n))
         for i in range(1,self.n):
             for j in range(i):
                 X[i,j] = self.bernoulli(self.Q[self.clusters[i],self.clusters[j]])
                 X[j,i] = X[i,j]
         self.X = X
-        
-    def solve_relaxed_SDP(self):   
-        density = 2*np.sum(self.X) / (self.n * (self.n - 1))
-        #alpha = min(1, (self.K**3/self.n)*np.exp(2*self.n*density))
-        alpha = 1 / min(list(filter(lambda x : x>0, self.effectifs)))
-        B = cp.Variable((self.n,self.n))
-        constraints = [B >> 0]
-        constraints += [
-           B == B.T
-        ]
-        ones = np.ones(self.n)
-        constraints += [
-           B@ones == ones
-        ]
-        constraints += [
-           cp.trace(B)==self.K
-        ]
-        constraints += [
-           B[i//self.n,i%self.n]>=0 for i in range(self.n * self.n)
-        ]
-        constraints += [
-           alpha-B[i//self.n,i%self.n]>=0 for i in range(self.n * self.n)
-        ]
-        prob = cp.Problem(cp.Minimize(-cp.trace(self.X@(self.X).T@B)),
-                          constraints)
-        prob.solve()
-        self.B_relaxed = B.value
 
-    def compute_costs(self):
-        print('True cost', np.trace(self.X@self.X.T@self.B))
-        print('Approximated cost', np.trace(self.X@self.X.T@self.B_relaxed))
+
+    def estimate_partition(self):
+        """Runs the algorithm to estimate communities of the nodes."""
+        self.solve_relaxed_SDP()
+        self.solve_relaxed_LP(self.B_relaxed)
+        self.Kmedoids()
 
     def proportion_error(self):
+        """Compute the misclassification error of our estimated clustering of the nodes."""
         error = 0
         for k in range(self.K):
             try:
@@ -123,18 +111,3 @@ class SBM(Clustering, Estimation):
                 error += len(self.true_partition[k])
         return (error / self.n)
 
-    def visualize_B_matrices(self):
-        I = np.argsort(self.clusters)
-        fig = plt.figure()
-        ax = fig.add_subplot(121)
-        temp = self.B_relaxed[I,:]
-        ax.imshow(temp[:,I], cmap='Greys')
-        ax.set_title('$\hat{B}$', fontsize=15)
-        ax = fig.add_subplot(122)
-        temp = self.B[I,:]
-        sc=ax.imshow(temp[:,I], cmap='Greys')
-        ax.set_title('$B^*$', fontsize=15)
-        left, bottom, width, height = ax.get_position().bounds
-        cax = fig.add_axes([left+width+0.01, bottom, width*0.05, height])
-        plt.colorbar(sc, cax=cax)
-        plt.show()

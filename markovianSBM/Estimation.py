@@ -3,10 +3,12 @@ import os
 
 
 class Estimation():
+    """Class related to the estimation of the parameters of our model."""
     def __init__(self):
         pass 
 
     def estimate_transition_matrix(self):
+        """Estimates the transition matrix and the invariant measure of the chain."""
         assert(self.fw == 'markov')
         self.approx_P = np.zeros((self.K,self.K))
         if self.permutation is None:
@@ -26,6 +28,7 @@ class Estimation():
         self.approx_P /= np.tile(self.approx_pi.reshape(-1,1),(1,self.K))
 
     def estimate_connectivity_matrix(self):
+        """Estimates the connectivity matrix."""
         self.approx_Q = np.zeros((self.K,self.K))
         if self.permutation is None:
             true_partition   = self.build_partition(self.clusters)
@@ -43,12 +46,7 @@ class Estimation():
             for l in range(self.K):
                 self.approx_Q[k,l] /= approx_effectifs[k]*approx_effectifs[l]
 
-
-    def estimate_partition(self):
-        self.solve_relaxed_SDP()
-        self.solve_relaxed_LP(self.B_relaxed)
-        self.Kmedoids()
-
     def estimate_parameters(self):
+        """Estimates the parameters of the model."""
         self.estimate_transition_matrix()
         self.estimate_connectivity_matrix()
