@@ -1,6 +1,6 @@
 # inference-markovian-SBM
 
-This repository provides the code related to the preprint : .
+This repository provides the code related to the preprint : . A documentation for this code is available [here](https://inference-markovian-sbm.readthedocs.io/).
 
 We introduce a new Stochastic Block Model where the communities of the nodes of the graph are assigned using a Markovian dynamic. 
 Solving a relaxed Semi Definite Program followed by a rounding step, our algorithm aims at recovering the communities of the nodes of the graph. We show that the misclassification error decays exponentially fast with respect to an appropriate Signal to Noise Ratio. We prove also that in the relatively sparse regime, we are able to estimate with consistency the parameters of our model.
