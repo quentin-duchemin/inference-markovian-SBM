@@ -1,6 +1,6 @@
 # inference-markovian-SBM
 
-This repository provides the code related to the preprint : . A documentation for this code is available [here](https://inference-markovian-sbm.readthedocs.io/).
+This repository provides the code related to the preprint: [https://arxiv.org/abs/2004.04402](https://arxiv.org/abs/2004.04402). A documentation for this code is available [here](https://inference-markovian-sbm.readthedocs.io/).
 
 ### Description of the project
 
