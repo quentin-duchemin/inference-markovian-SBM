@@ -65,6 +65,10 @@ class SBM(RelaxedKmeans, Clustering, Estimation):
             for j in range(self.n):
                 if self.clusters[i]==self.clusters[j]:
                     self.B[i,j] = 1/self.effectifs[self.clusters[i]]
+
+
+
+
             
     def next_state(self, i):
         """Method used to sample the community of the next code knowing that the community of the previous node was i."""

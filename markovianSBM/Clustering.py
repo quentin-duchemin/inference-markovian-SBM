@@ -52,13 +52,13 @@ class Clustering:
         ##    - each feasible integer solution for the modified instance can be converted to a feasible integer 
         ##      solution for the original instance with a small added cost
         d = np.ones(self.n)
+        self.barx = self.barx * (1* (self.barx>0))
         barC = np.diag(self.C@self.barx)
-        ind = np.argsort(barC)
         for j in range(self.n):
             for i in range(j):
-                if d[ind[i]]>0 and self.C[ind[i],ind[j]]<=4*barC[ind[j]]:
-                    d[ind[i]] += d[ind[j]]
-                    d[ind[j]] = 0
+                if d[i]>0 and self.C[i,j]<=4*barC[j]:
+                    d[i] += d[j]
+                    d[j] = 0
 
         # Step 2 : Consolidating centers
         
@@ -81,10 +81,10 @@ class Clustering:
             # We only move the nodes with a null demand and a partial open center (i.e y>0) and thus that can't be a center            
             if d[i]==0 and py[i]>0:
                 # We assign i to the closest point j such that d[j] > 0             
-                py[j] = min(1 , py[i] + py[j])
+                py[ls[j]] = min(1 , py[i] + py[ls[j]])
                 py[i] = 0
                 for pj in range(self.n):
-                    px[j,pj] += px[i,pj]
+                    px[ls[j],pj] += px[i,pj]
                     px[i,pj] = 0
             
             if d[i]>0:
@@ -111,27 +111,34 @@ class Clustering:
         odd_level = []
         even_level = []
         dico_closest = {i:closest[i] for i in list_keys if haty[i]==1/2}
+        go_on = False
         if len(dico_closest)>0:
-            j, s_j = dico_closest.popitem()
-        level = 0
-        while len(dico_closest)>0:
-            if level%2==0:
-                odd_level.append(j)
-            else:
-                even_level.append(j)
-            level += 1
-            if s_j in dico_closest:
-                j = s_j
-                s_j = dico_closest[s_j]
-                del dico_closest[j]
-            elif len(dico_closest)>0:              
                 j, s_j = dico_closest.popitem()
-                level = 0
+                even_level.append(j)
+                go_on = True
+        level = 1
+        while go_on:
+                if level%2==0:
+                        even_level.append(s_j)
+                else:
+                        odd_level.append(s_j)
+                level += 1
+                if s_j in dico_closest:
+                        j = s_j
+                        s_j = dico_closest[s_j]
+                        del dico_closest[j]
+                elif len(dico_closest)>0:              
+                        j, s_j = dico_closest.popitem()
+                        even_level.append(j)
+                        level = 1
+                else:
+                        go_on = False
+        self.num_centers= len(centers)
         if len(odd_level)<len(even_level):
             centers = centers + odd_level
         else:
             centers = centers + even_level
-        
+        self.num_centersbis = len(centers)
         # -1 is assigned to the nodes that are not centers. Otherwise, we numerote them.
         num_center = -np.ones(self.n)
         for ind, j in enumerate(centers):
