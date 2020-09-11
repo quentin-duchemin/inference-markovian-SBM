@@ -3,6 +3,35 @@ import cvxpy as cp
 import numpy as np
 import os
 
+   
+def add_liste(Level, Liste, Node, UP=True):
+    if Level==-1:
+        Liste = [Node] + Liste
+    elif Level >= len(Liste):
+        Liste.append([Node])
+        if UP:
+            Level -= 1
+        else:
+            Level += 1
+    else:
+        Liste.append([Node])
+        if UP:
+            Level -= 1
+        else:
+            Level += 1
+    return Level, Liste
+    
+def recu(node, level, graph, liste, node2ind, dejavu, dico_closest, nodes):
+    L = []
+    for ind in range(len(nodes)):
+        if graph[ind,node2ind[node]] and dejavu[ind]==0:
+            L.append(ind)
+    for ind in L:
+        if graph[ind,node2ind[node]] and dejavu[ind]==0:
+            level, liste = add_liste(level, liste, nodes[ind], UP=True)
+            dejavu[ind] = 1
+            graph, liste, dejavu = recu(nodes[ind], level, graph, liste, node2ind, dejavu, dico_closest, nodes)
+    return graph, liste, dejavu
 
 
 class Clustering:
@@ -111,33 +140,69 @@ class Clustering:
         odd_level = []
         even_level = []
         dico_closest = {i:closest[i] for i in list_keys if haty[i]==1/2}
-        go_on = False
-        if len(dico_closest)>0:
-                j, s_j = dico_closest.popitem()
-                even_level.append(j)
-                go_on = True
-        level = 1
-        while go_on:
-                if level%2==0:
-                        even_level.append(s_j)
-                else:
-                        odd_level.append(s_j)
-                level += 1
-                if s_j in dico_closest:
-                        j = s_j
-                        s_j = dico_closest[s_j]
-                        del dico_closest[j]
-                elif len(dico_closest)>0:              
-                        j, s_j = dico_closest.popitem()
-                        even_level.append(j)
-                        level = 1
-                else:
-                        go_on = False
+        import copy
+
+
+        dic = dico_closest.copy()
+        for key,value in dic.items():
+                try:
+                        if dico_closest[value]==key:
+                                del dico_closest[key]
+                except:
+                        pass
+
+        keys = list(dico_closest.keys())
+        values = list(dico_closest.values())
+        nodes = list(set(keys+values))
+        graph = np.zeros((len(nodes),len(nodes)))
+        node2ind = {node:ind for ind,node in enumerate(nodes)}
+        for ind,key in enumerate(keys):
+                graph[node2ind[key],node2ind[values[ind]]] = 1
+
+        dejavu = np.zeros(len(nodes))
+
+        while len(dejavu)!=np.sum(dejavu):
+                notfound = True
+                indj = 0
+                level = 0
+                liste = []
+                while notfound and indj<len(nodes):
+                        if np.sum(graph[:,indj])==0 and np.sum(graph[indj,:])>0 and dejavu[indj]==0:
+                                notfound = False
+                                j = nodes[indj]
+                                liste.append([j])
+                                s_j = dico_closest[j]
+                                liste.append([s_j])
+                                inds_j = node2ind[s_j]
+                                dejavu[indj] = 1
+                                dejavu[inds_j] = 1
+                                graph, liste, dejavu = recu(s_j, 1, graph, liste, node2ind, dejavu, dico_closest, nodes)
+                                level = 2
+                                j = s_j
+                                indj = inds_j
+
+                                if np.sum(graph[indj,:])>0:
+                                        s_j = dico_closest[j]
+                                        inds_j = node2ind[s_j]
+                                        if dejavu[inds_j]==0:
+                                                dejavu[inds_j] = 1
+                                                graph, liste, dejavu = recu(s_j, level-1, graph, liste, node2ind, dejavu, dico_closest, nodes)
+                                                level, liste = add_liste(level, liste, s_j, UP=False)
+                                                j = s_j
+                                                indj = inds_j
+                        indj += 1
+                for ind in range(len(liste)):
+                        if ind % 2:
+                                even_level += liste[ind]
+                        else:
+                                odd_level += liste[ind]
+            
+                
         self.num_centers= len(centers)
         if len(odd_level)<len(even_level):
-            centers = centers + odd_level
+            centers = centers + list(set(odd_level))
         else:
-            centers = centers + even_level
+            centers = centers + list(set(even_level))
         self.num_centersbis = len(centers)
         # -1 is assigned to the nodes that are not centers. Otherwise, we numerote them.
         num_center = -np.ones(self.n)
@@ -164,12 +229,12 @@ class Clustering:
         self.true_partition   = self.build_partition(self.clusters)
         approx_partition = self.build_partition(self.clusters_approx) 
         self.find_permutation(self.true_partition, approx_partition)
-        self.approx_partition = {}
-        for k in range(self.K):
-            self.approx_partition[k] = approx_partition[self.permutation[k]]
+        inverse = [0] * len(self.permutation)
+        for i, p in enumerate(self.permutation):
+                inverse[p] = i
         clusts_approx = np.copy(self.clusters_approx)
         for i,group in enumerate(clusts_approx):
-            self.clusters_approx[i] = self.permutation[group]
+            self.clusters_approx[i] = inverse[group]
 
     def build_partition(self, clust):
         """Given a list clust that associates to each node its community, this methods builds the associated
