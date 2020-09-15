@@ -83,11 +83,12 @@ class Clustering:
         d = np.ones(self.n)
         self.barx = self.barx * (1* (self.barx>0))
         barC = np.diag(self.C@self.barx)
+        ind = np.argsort(barC)
         for j in range(self.n):
             for i in range(j):
-                if d[i]>0 and self.C[i,j]<=4*barC[j]:
-                    d[i] += d[j]
-                    d[j] = 0
+                if d[ind[i]]>0 and self.C[ind[i],ind[j]]<=4*barC[ind[j]]:
+                    d[ind[i]] += d[ind[j]]
+                    d[ind[j]] = 0
 
         # Step 2 : Consolidating centers
         
@@ -181,7 +182,9 @@ class Clustering:
                                 j = s_j
                                 indj = inds_j
 
-                                if np.sum(graph[indj,:])>0:
+                                leaf = False
+                                while not(leaf):
+                                    if np.sum(graph[indj,:])>0:
                                         s_j = dico_closest[j]
                                         inds_j = node2ind[s_j]
                                         if dejavu[inds_j]==0:
@@ -190,6 +193,10 @@ class Clustering:
                                                 level, liste = add_liste(level, liste, s_j, UP=False)
                                                 j = s_j
                                                 indj = inds_j
+                                        else:
+                                          leaf = True
+                                    else:
+                                      leaf = True
                         indj += 1
                 for ind in range(len(liste)):
                         if ind % 2:
@@ -203,6 +210,7 @@ class Clustering:
             centers = centers + list(set(odd_level))
         else:
             centers = centers + list(set(even_level))
+        centers = list(set(centers))
         self.num_centersbis = len(centers)
         # -1 is assigned to the nodes that are not centers. Otherwise, we numerote them.
         num_center = -np.ones(self.n)
