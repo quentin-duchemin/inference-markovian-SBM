@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from .Clustering import Clustering
 from .Estimation import Estimation
 from .RelaxedKmeans import RelaxedKmeans
-
+from .BaumWelch import BaumWelch
 
 class SBM(RelaxedKmeans, Clustering, Estimation, BaumWelch):
 	"""Main class building the graph and running the algorithm to recover communities."""
