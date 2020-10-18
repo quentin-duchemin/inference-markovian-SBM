@@ -32,9 +32,10 @@ class RelaxedKmeans():
 			alpha-B[i//self.n,i%self.n]>=0 for i in range(self.n * self.n)
 		]
 		prob = cp.Problem(cp.Minimize(-cp.trace(self.X@(self.X).T@B)),
-						  constraints)
+						constraints)
 		prob.solve()
-		self.B_relaxed = B.value
+		B_relaxed = B.value
+		return B_relaxed
 
 	def compute_costs(self):
 		"""Show the value of the objective function of the SDP with the matrix $B^*$ 
@@ -46,6 +47,7 @@ class RelaxedKmeans():
 		"""Method providing a vizualisation of the matrices $B^*$ (optimal solution of the K-means problem) and 
 		$\hat{B}$ optimal solution of the SDP relaxation. This allows to easily see if a final rounding step on the rows of 
 		$\hat{B}$ could allow to reach a relevant clustering of the nodes of the graph."""
+		assert self.save_B_matrices, "To visualize B matrices, we need to set the attribute 'save_B_matrices' of the SBM object to 'True'."
 		I = np.argsort(self.clusters)
 		fig = plt.figure()
 		ax = fig.add_subplot(121)
