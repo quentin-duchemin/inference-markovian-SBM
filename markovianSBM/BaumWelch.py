@@ -5,12 +5,12 @@ import os
 import matplotlib.pyplot as plt
 
 class BaumWelch():
-    """Class which performs the Baum-Welch algorithm and that uses it to solve the link prediction and the collaborative filtering problems."""
+	"""Class which performs the Baum-Welch algorithm and that uses it to solve the link prediction and the collaborative filtering problems."""
 	def __init__(self):
 		pass
 
 	def forward(self, ini, P, O, m, n, delta, Y, K=None):
-        """Forward step of the BaumWelch algorithm"""
+		"""Forward step of the BaumWelch algorithm"""
 		if K is None:
 			K=self.K
 		alpha = np.ones((K, n+delta+1))
@@ -30,7 +30,7 @@ class BaumWelch():
 		return alpha
 
 	def backward(self, P, O, m, n, delta, Y, K=None):
-        """Backward step of the BaumWelch algorithm"""
+		"""Backward step of the BaumWelch algorithm"""
 		if K is None:
 			K=self.K
 		beta = np.ones((K, n+delta+1))
@@ -50,7 +50,7 @@ class BaumWelch():
 		return beta
 
 	def update(self, alpha, beta, P, O, m, n, delta, Y, K=None):
-        """Update step of the BaumWelch algorithm: the parameters of the HMM are updated and returned"""
+		"""Update step of the BaumWelch algorithm: the parameters of the HMM are updated and returned"""
 		if K is None:
 			K=self.K
 		xi = np.zeros((K,K, n+delta+1))
@@ -77,7 +77,7 @@ class BaumWelch():
 		return (ini, gamma, P, O)
 
 	def adjacency_BaumWelch(self, m, n, delta):
-        """Builds an adjacency matrix from the attribute self.X removing the nodes between m+1 and n-1 (that we consider to be not reliable)."""
+		"""Builds an adjacency matrix from the attribute self.X removing the nodes between m+1 and n-1 (that we consider to be not reliable)."""
 		X = np.zeros((m+1+delta+1,m+1+delta+1))
 		for i in range(m+1):
 			X[i,:m+1] = self.X[i,:m+1]
@@ -90,7 +90,7 @@ class BaumWelch():
 		return X
 
 	def BaumWelch(self, m, n, delta, nbite, eps = 1e-2, K=None):
-        """BaumWelch algorithm that iteratively perform the forward, backward and update steps."""
+		"""BaumWelch algorithm that iteratively perform the forward, backward and update steps."""
 		if K is None:
 			K=self.K
 		self.estimate_partition()
@@ -112,9 +112,9 @@ class BaumWelch():
 		return ini, gamma, P, O
 
 	def collaborative_filtering_robustMAP(self, ini, alpha, beta, observed_links, observed_nodes, m, n):
-        """Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want to predict the community of node
-        n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-        Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want to predict the community of node
+		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
+		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
 		best_pred = 0
 		best_k = -1
 		indices = np.argsort(observed_nodes)[::-1]
@@ -156,9 +156,9 @@ class BaumWelch():
 		return best_k
 
 	def collaborative_filtering_pluginMAP(self, alpha, beta, observed_links, observed_nodes, m, n):
-        """Solve the collaborative filtering problem using the plugin approach when we observe fully the graph at time m and we want to predict the community of node
-        n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-        Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""Solve the collaborative filtering problem using the plugin approach when we observe fully the graph at time m and we want to predict the community of node
+		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
+		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
 		best_pred = 0
 		best_k = -1
 		for k in range(G.K):
@@ -174,9 +174,9 @@ class BaumWelch():
 		return best_k
 
 	def collaborative_filtering_optimalMAP(self, alpha, beta, observed_links, observed_nodes, m, n):
-        """Solve robustly the collaborative filtering problem using the optimal approach when we observe fully the graph at time m and we want to predict the community of node
-        n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-        Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""Solve robustly the collaborative filtering problem using the optimal approach when we observe fully the graph at time m and we want to predict the community of node
+		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
+		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
 		best_pred = 0
 		best_k = -1
 		for k in range(self.K):
