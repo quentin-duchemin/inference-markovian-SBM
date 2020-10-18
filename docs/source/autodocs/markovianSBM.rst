@@ -1,6 +1,15 @@
 markovianSBM
 ============
 
+
+markovianSBM.BaumWelch module
+------------------------------
+
+.. automodule:: markovianSBM.BaumWelch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 markovianSBM.Clustering module
 ------------------------------
 
