@@ -10,7 +10,24 @@ class BaumWelch():
 		pass
 
 	def forward(self, ini, P, O, m, n, delta, Y, K=None):
-		"""Forward step of the BaumWelch algorithm"""
+		"""
+		Forward step of the BaumWelch algorithm.
+		We observe the connections between nodes 0,...,m,n,...,n+delta. However, we consider that the edges involving
+		nodes between m+1 and n-1 are not reliable and we do not take into account the estimated clusters for the nodes 
+		between m+1 and n-1. 
+
+		:param ini: initial distribution of the Markov chain
+		:param P: Transition matrix of the Markov chain
+		:param O: matrix of emission probabilities
+		:param m: We observe fully the graph until time m
+		:param n: We do not observe reliably the connection involving nodes between time m and n
+		:param delta: We observe the connections between nodes n and n+delta
+		:param Y: vector of length n+delta+1 of the estimated communities
+		:param K: Number of communities
+
+		.. note: Using this function with a specified K can be typically interesting when we try to 
+		estimate the number of clusters with the procedure describes in the paper.
+		"""
 		if K is None:
 			K=self.K
 		alpha = np.ones((K, n+delta+1))
@@ -30,7 +47,23 @@ class BaumWelch():
 		return alpha
 
 	def backward(self, P, O, m, n, delta, Y, K=None):
-		"""Backward step of the BaumWelch algorithm"""
+		"""
+		Backward step of the BaumWelch algorithm.
+		We observe the connections between nodes 0,...,m,n,...,n+delta. However, we consider that the edges involving
+		nodes between m+1 and n-1 are not reliable and we do not take into account the estimated clusters for the nodes 
+		between m+1 and n-1. 
+
+		:param P: Transition matrix of the Markov chain
+		:param O: matrix of emission probabilities
+		:param m: We observe fully the graph until time m
+		:param n: We do not observe reliably the connection involving nodes between time m and n
+		:param delta: We observe the connections between nodes n and n+delta
+		:param Y: vector of length n+delta+1 of the estimated communities
+		:param K: Number of communities
+
+		.. note: Using this function with a specified K can be typically interesting when we try to 
+		estimate the number of clusters with the procedure describes in the paper.
+		"""
 		if K is None:
 			K=self.K
 		beta = np.ones((K, n+delta+1))
@@ -50,7 +83,22 @@ class BaumWelch():
 		return beta
 
 	def update(self, alpha, beta, P, O, m, n, delta, Y, K=None):
-		"""Update step of the BaumWelch algorithm: the parameters of the HMM are updated and returned"""
+		"""
+		Update step of the BaumWelch algorithm: the parameters of the HMM are updated and returned.
+
+		:param alpha: Matrix of size $K \times n+delta$ giving the output of the "forward" method 
+		:param beta: Matrix of size $K \times n+delta$ giving the output of the "backward" method
+		:param P: Transition matrix of the Markov chain
+		:param O: matrix of emission probabilities 
+		:param m: We observe fully the graph until time m
+		:param n: We do not observe reliably the connection involving nodes between time m and n
+		:param delta: We observe the connections between nodes n and n+delta
+		:param Y: vector of length n+delta+1 of the estimated communities
+		:param K: Number of communities
+
+		.. note: Using this function with a specified K can be typically interesting when we try to 
+		estimate the number of clusters with the procedure describes in the paper.
+		"""
 		if K is None:
 			K=self.K
 		xi = np.zeros((K,K, n+delta+1))
@@ -112,9 +160,24 @@ class BaumWelch():
 		return ini, gamma, P, O
 
 	def collaborative_filtering_robustMAP(self, ini, alpha, beta, observed_links, observed_nodes, m, n):
-		"""Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want to predict the community of node
-		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""
+		Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want 
+		to predict the community of node n when we observe only a subset of the edges that connects (or not) n
+		with the nodes 1,...,m. 
+
+		:param ini: initial distribution of the Markov chain given by the Baum-Welch algorithm
+		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
+		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
+		(or not) with node n
+		:param m: We observe fully the graph until time m
+		:param n: Node that we want to learn the community
+
+		.. note: Our implementation do not respect striclty the formula of the paper. We get rid of quantities that do not depend on
+		the cluster k of node n. This allows to avoid underflow issues.
+		"""
 		best_pred = 0
 		best_k = -1
 		indices = np.argsort(observed_nodes)[::-1]
@@ -156,9 +219,20 @@ class BaumWelch():
 		return best_k
 
 	def collaborative_filtering_pluginMAP(self, alpha, beta, observed_links, observed_nodes, m, n):
-		"""Solve the collaborative filtering problem using the plugin approach when we observe fully the graph at time m and we want to predict the community of node
-		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""
+		Solve the collaborative filtering problem using the plugin approach when we observe fully the graph at
+		time m and we want to predict the community of node n when we observe only a subset of the edges that 
+		connects (or not) n with the nodes 1,...,m. 
+
+		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
+		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
+		(or not) with node n
+		:param m: We observe fully the graph until time m
+		:param n: Node that we want to learn the community
+		"""
 		best_pred = 0
 		best_k = -1
 		for k in range(G.K):
@@ -174,9 +248,19 @@ class BaumWelch():
 		return best_k
 
 	def collaborative_filtering_optimalMAP(self, alpha, beta, observed_links, observed_nodes, m, n):
-		"""Solve robustly the collaborative filtering problem using the optimal approach when we observe fully the graph at time m and we want to predict the community of node
-		n when we observe only a subset of the edges that connects (or not) n with the nodes 1,...,m. Observed_links is a vector with binary variables of length less than m. 
-		Its length is the same as the one of the vector observed_nodes. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise)."""
+		"""Solve robustly the collaborative filtering problem using the optimal approach when we observe fully 
+		the graph at time m and we want to predict the community of node n when we observe only a subset of the 
+		edges that connects (or not) n with the nodes 1,...,m. 
+
+		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
+		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
+		(or not) with node n
+		:param m: We observe fully the graph until time m
+		:param n: Node that we want to learn the community
+		"""
 		best_pred = 0
 		best_k = -1
 		for k in range(self.K):
