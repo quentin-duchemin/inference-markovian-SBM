@@ -11,7 +11,11 @@ Markovian-SBM's documentation
 	:caption: Contents:
    
 	readmelink
-	autodocs/markovianSBM.rst
+	autodocs/SBM.rst
+	autodocs/RelaxedKmeans.rst
+	autodocs/BaumWelch.rst
+	autodocs/Clustering.rst
+	autodocs/Estimation.rst
 
 
 

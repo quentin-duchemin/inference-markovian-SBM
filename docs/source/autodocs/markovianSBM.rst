@@ -10,32 +10,32 @@ BaumWelch module
     :undoc-members:
     :show-inheritance:
 
-markovianSBM.Clustering module
-------------------------------
+Clustering module
+-----------------
 
 .. automodule:: markovianSBM.Clustering
     :members:
     :undoc-members:
     :show-inheritance:
 
-markovianSBM.RelaxedKmeans module
----------------------------------
+RelaxedKmeans module
+--------------------
 
 .. automodule:: markovianSBM.RelaxedKmeans
     :members:
     :undoc-members:
     :show-inheritance:
 
-markovianSBM.Estimation module
-------------------------------
+Estimation module
+-----------------
 
 .. automodule:: markovianSBM.Estimation
     :members:
     :undoc-members:
     :show-inheritance:
 
-markovianSBM.SBM module
------------------------
+SBM module
+----------
 
 .. automodule:: markovianSBM.SBM
     :members:
