@@ -35,14 +35,24 @@ def recu(node, level, graph, liste, node2ind, dejavu, dico_closest, nodes):
 
 
 class Clustering:
-	"""Class that performs the final rounding step on the rows of the matrix $\hat{B}$ which is the 
-	optimal solution of the SDP relaxation of the K-means problem."""
+	"""
+	Class that performs the final rounding step on the rows of the matrix $\hat{B}$ which is the 
+	optimal solution of the SDP relaxation of the K-means problem.
+	"""
 	def __init__(self, n, K):
+		"""
+		:param n: Nomber of nodes in the graph
+		:param K: Number of clusters
+		"""
 		self.n = n
 		self.K = K
 
 	def solve_relaxed_LP(self, M):
-		"""Prelimanary to run the K-medoid algorithm."""
+		"""
+		Prelimanary to run the K-medoid algorithm.
+
+		:param M: M is the output of the relaxed SDP problem.
+		"""
 		barx = cp.Variable((self.n,self.n))
 		bary = cp.Variable(self.n)
 		C = np.zeros((self.n,self.n))
@@ -72,7 +82,13 @@ class Clustering:
 		return barx, bary, C
 		
 	def Kmedoids(self, barx, bary, C):
-		"""Kmedoid algorithm that performs a rounding step on the rows of $\hat{B}$."""
+		"""
+		Kmedoid algorithm that performs a rounding step on the rows of $\hat{B}$.
+
+		:param barx: Output of the method 'solve_relaxed_LP'
+		param bary: Output of the method 'solve_relaxed_LP'
+		:param C: Output of the method 'solve_relaxed_LP'
+		"""
 		# Step 1 : consolidating locations
 		
 		## It consists in moving revelantly demand.		
@@ -242,16 +258,25 @@ class Clustering:
 			self.clusters_approx[i] = inverse[group]
 
 	def build_partition(self, clust):
-		"""Given a list clust that associates to each node its community, this methods builds the associated
-		partition of the noes of the graph."""
+		"""
+		Given a list clust that associates to each node its community, this methods builds the associated
+		partition of the noes of the graph.
+
+		:param clust: List of estimated clusters for the n nodes of the graph
+		"""
 		d = {i:set() for i in range(self.K)}
 		for i in range(len(clust)):
 			d[clust[i]].add(i)
 		return (d)
 
 	def find_permutation(self, true_partition, approx_partition):
-		"""Find the permutation between the names of the true communities and the ones estimated by our 
-		algorithm."""
+		"""
+		Find the permutation between the names of the true communities and the ones estimated by our 
+		algorithm.
+
+		:param true_partition: True partition of the nodes in the graph according to their clusters
+		:param approx_partition: Estimated partition of the nodes  
+		"""
 		import itertools
 		permus = list(itertools.permutations([i for i in range(self.K)]))
 		best_error = np.float('inf')

@@ -25,7 +25,8 @@ class BaumWelch():
 		:param Y: vector of length n+delta+1 of the estimated communities
 		:param K: Number of communities
 
-		.. note: Using this function with a specified K can be typically interesting when we try to 
+		.. note: 
+		Using this function with a specified K can be typically interesting when we try to 
 		estimate the number of clusters with the procedure describes in the paper.
 		"""
 		if K is None:
@@ -61,7 +62,8 @@ class BaumWelch():
 		:param Y: vector of length n+delta+1 of the estimated communities
 		:param K: Number of communities
 
-		.. note: Using this function with a specified K can be typically interesting when we try to 
+		.. note: 
+		Using this function with a specified K can be typically interesting when we try to 
 		estimate the number of clusters with the procedure describes in the paper.
 		"""
 		if K is None:
@@ -96,7 +98,8 @@ class BaumWelch():
 		:param Y: vector of length n+delta+1 of the estimated communities
 		:param K: Number of communities
 
-		.. note: Using this function with a specified K can be typically interesting when we try to 
+		.. note: 
+		Using this function with a specified K can be typically interesting when we try to 
 		estimate the number of clusters with the procedure describes in the paper.
 		"""
 		if K is None:
@@ -125,7 +128,13 @@ class BaumWelch():
 		return (ini, gamma, P, O)
 
 	def adjacency_BaumWelch(self, m, n, delta):
-		"""Builds an adjacency matrix from the attribute self.X removing the nodes between m+1 and n-1 (that we consider to be not reliable)."""
+		"""
+		Builds an adjacency matrix from the attribute self.X removing the nodes between m+1 and n-1 (that we consider to be not reliable).
+
+		:param m: We observe fully the graph until time m
+		:param n: We do not observe reliably how nodes between m+1 and n-1 are connected
+		:param delta: We observe reliably how nodes between n and n+delta are connected
+		"""
 		X = np.zeros((m+1+delta+1,m+1+delta+1))
 		for i in range(m+1):
 			X[i,:m+1] = self.X[i,:m+1]
@@ -138,7 +147,20 @@ class BaumWelch():
 		return X
 
 	def BaumWelch(self, m, n, delta, nbite, eps = 1e-2, K=None):
-		"""BaumWelch algorithm that iteratively perform the forward, backward and update steps."""
+		"""
+		BaumWelch algorithm that iteratively perform the forward, backward and update steps.
+
+		:param m: We observe fully the graph until time m
+		:param n: We do not observe reliably the connection involving nodes between time m and n
+		:param delta: We observe the connections between nodes n and n+delta
+		:param nbite: Number of iterations for the Baum Welch algorithm
+		:param eps: Parameter use to initialize the matrix of emission probabilities O
+		:param K: Number of communities
+
+		.. note: 
+		Using this function with a specified K can be typically interesting when we try to 
+		estimate the number of clusters with the procedure describes in the paper.
+		"""
 		if K is None:
 			K=self.K
 		self.estimate_partition()
@@ -168,14 +190,13 @@ class BaumWelch():
 		:param ini: initial distribution of the Markov chain given by the Baum-Welch algorithm
 		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
 		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
-		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
-		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
-		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
-		(or not) with node n
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection (or not) with node n
 		:param m: We observe fully the graph until time m
 		:param n: Node that we want to learn the community
 
-		.. note: Our implementation do not respect striclty the formula of the paper. We get rid of quantities that do not depend on
+		.. note: 
+		Our implementation do not respect striclty the formula of the paper. We get rid of quantities that do not depend on
 		the cluster k of node n. This allows to avoid underflow issues.
 		"""
 		best_pred = 0
@@ -226,10 +247,8 @@ class BaumWelch():
 
 		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
 		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
-		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
-		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
-		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
-		(or not) with node n
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection (or not) with node n
 		:param m: We observe fully the graph until time m
 		:param n: Node that we want to learn the community
 		"""
@@ -254,10 +273,8 @@ class BaumWelch():
 
 		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
 		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
-		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only
-		if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
-		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection
-		(or not) with node n
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection (or not) with node n
 		:param m: We observe fully the graph until time m
 		:param n: Node that we want to learn the community
 		"""

@@ -8,7 +8,9 @@ class Estimation():
 		pass 
 
 	def estimate_transition_matrix(self):
-		"""Estimates the transition matrix and the invariant measure of the chain."""
+		"""
+		Estimates the transition matrix and the invariant measure of the chain.
+		"""
 		assert(self.fw == 'markov')
 		self.approx_P = np.zeros((self.K,self.K))
 		self.approx_pi = np.zeros(self.K)
@@ -23,7 +25,9 @@ class Estimation():
 		self.approx_P /= np.tile(self.approx_pi.reshape(-1,1),(1,self.K))
 
 	def estimate_connectivity_matrix(self):
-		"""Estimates the connectivity matrix."""
+		"""
+		Estimates the connectivity matrix.
+		"""
 		self.approx_Q = np.zeros((self.K,self.K))
 		approx_effectifs = np.zeros(self.K)
 		for i in range(self.n):
@@ -37,12 +41,16 @@ class Estimation():
 				self.approx_Q[k,l] /= approx_effectifs[k]*approx_effectifs[l]
 
 	def estimate_parameters(self):
-		"""Estimates the parameters of the model."""
+		"""
+		Estimates the parameters of the model.
+		"""
 		self.estimate_transition_matrix()
 		self.estimate_connectivity_matrix()
 
 	def estimate_effectifs(self):
-		"""Computes the sizes of each clusters"""
+		"""
+		Computes the sizes of each clusters
+		"""
 		self.approx_effectifs = np.zeros(self.K)
 		self.approx_transitions = np.zeros((self.K,self.K))
 		for node in range(self.n):
