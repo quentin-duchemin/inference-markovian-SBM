@@ -2,8 +2,8 @@ markovianSBM
 ============
 
 
-markovianSBM.BaumWelch module
-------------------------------
+BaumWelch module
+----------------
 
 .. automodule:: markovianSBM.BaumWelch
     :members:

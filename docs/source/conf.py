@@ -32,8 +32,8 @@ import markovianSBM
 # -- Project information -----------------------------------------------------
 
 project = 'Markovian-SBM'
-copyright = '2020, Quentin Duchemin'
-author = 'Quentin Duchemin'
+#copyright = '2020, Quentin Duchemin'
+#author = 'Quentin Duchemin'
 
 # The short X.Y version
 version = ''

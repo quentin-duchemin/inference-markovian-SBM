@@ -86,7 +86,7 @@ class Clustering:
 		Kmedoid algorithm that performs a rounding step on the rows of $\hat{B}$.
 
 		:param barx: Output of the method 'solve_relaxed_LP'
-		param bary: Output of the method 'solve_relaxed_LP'
+		:param bary: Output of the method 'solve_relaxed_LP'
 		:param C: Output of the method 'solve_relaxed_LP'
 		"""
 		# Step 1 : consolidating locations
