@@ -181,7 +181,7 @@ class BaumWelch():
 			ini, gamma, P, O = self.update(alpha, beta, P, O, m, n, delta, Y)
 		return ini, gamma, P, O
 
-	def collaborative_filtering_robustMAP(self, ini, alpha, beta, observed_links, observed_nodes, m, n):
+	def collaborative_filtering_robustMAP(self, ini, alpha, beta, O ,observed_links, observed_nodes, m, n):
 		"""
 		Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want 
 		to predict the community of node n when we observe only a subset of the edges that connects (or not) n
@@ -204,6 +204,7 @@ class BaumWelch():
 		indices = np.argsort(observed_nodes)[::-1]
 		observed_nodes = observed_nodes[indices]
 		observed_links = observed_links[indices]
+		ROB = []
 		for k in range(self.K):
 			res =  np.ones(self.K)  # beta[:,observed_nodes[0]]
 			for c in range(self.K):
@@ -234,10 +235,9 @@ class BaumWelch():
 					res = (1-self.approx_Q[:,k]) * restemp 
 			final_pred = np.sum(alpha[:,observed_nodes[-1]] * res)
 			final_pred *= np.sum(ini * (np.linalg.matrix_power(self.approx_P,n))[:,k])
-			if final_pred > best_pred:
-				best_pred = final_pred
-				best_k = k
-		return best_k
+			ROB.append(final_pred)
+		ROB /= np.sum(ROB)
+		return np.argmax(ROB)
 
 	def collaborative_filtering_pluginMAP(self, alpha, beta, observed_links, observed_nodes, m, n):
 		"""
@@ -254,7 +254,7 @@ class BaumWelch():
 		"""
 		best_pred = 0
 		best_k = -1
-		for k in range(G.K):
+		for k in range(self.K):
 			temp = np.linalg.matrix_power(self.approx_P,n-m)[self.clusters_approx[m],k]
 			for i,node in enumerate(observed_nodes):
 				if observed_links[i]:
@@ -291,3 +291,80 @@ class BaumWelch():
 				best_pred = temp
 				best_k = k
 		return best_k
+
+
+	def RES(self, ini, alpha, beta, O ,observed_links, observed_nodes, m, n):
+		"""
+		Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want 
+		to predict the community of node n when we observe only a subset of the edges that connects (or not) n
+		with the nodes 1,...,m. 
+
+		:param ini: initial distribution of the Markov chain given by the Baum-Welch algorithm
+		:param alpha: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param beta: Matrix of size $K \times n+delta$ given by the Baum-Welch algorithm
+		:param observed_links: A vector with binary variables of length less than m. For any i, observed_links[i] is 1 if and only if we observe an edge between nodes n and observed_nodes[i] (and 0 otherwise).
+		:param observed_nodes: A vector with the same length as the vector "observed_links". It contains the nodes for which we observe the connection (or not) with node n
+		:param m: We observe fully the graph until time m
+		:param n: Node that we want to learn the community
+
+		.. note: 
+		Our implementation do not respect striclty the formula of the paper. We get rid of quantities that do not depend on
+		the cluster k of node n. This allows to avoid underflow issues.
+		"""
+		best_pred = 0
+		best_k = -1
+		indices = np.argsort(observed_nodes)[::-1]
+		observed_nodes = observed_nodes[indices]
+		observed_links = observed_links[indices]
+		ROB = []
+		for k in range(self.K):
+			res =  np.ones(self.K)  # beta[:,observed_nodes[0]]
+			for c in range(self.K):
+				if observed_links[0]:
+					res[c] *= self.approx_Q[c,k]
+				else:
+					res[c] *= 1-self.approx_Q[c,k]
+			for i,node in enumerate(observed_nodes[:int(len(observed_links)-1)]):
+				chi = np.zeros((self.K, self.K))
+				nodei = node
+				nodeim = observed_nodes[i+1]
+				for c in range(self.K): 
+					for cb in range(self.K):
+						chi[c,cb] = self.approx_P[c,cb] * O[cb,self.clusters_approx[nodei]]
+				for step in range(nodei-1,nodeim,-1):
+					chitemp = np.zeros((self.K, self.K))
+					for c in range(self.K): 
+						for cb in range(self.K):
+							for cd in range(self.K):
+								chitemp[c,cb] += self.approx_P[c,cd] * ( O[cd,self.clusters_approx[step]] + chi[cd,cb])
+					chi = np.copy(chitemp)
+				restemp = np.zeros(self.K)
+				for c in range(self.K):
+					restemp[c] = np.sum(chi[c,:] * res)
+				if observed_links[i+1]:
+					res = self.approx_Q[:,k] * restemp
+				else:
+					res = (1-self.approx_Q[:,k]) * restemp 
+			final_pred = np.sum(alpha[:,observed_nodes[-1]] * res)
+			final_pred *= np.sum(ini * (np.linalg.matrix_power(self.approx_P,n))[:,k])
+			ROB.append(final_pred)
+		MAP = []
+		for k in range(self.K):
+			temp = np.linalg.matrix_power(self.approx_P,n-m)[self.clusters_approx[m],k]
+			for i,node in enumerate(observed_nodes):
+				if observed_links[i]:
+					temp *= self.approx_Q[self.clusters_approx[node],k]
+				else:
+					temp *= 1-self.approx_Q[self.clusters_approx[node],k]
+			MAP.append(temp)
+
+		OPT = []
+		for k in range(self.K):
+			temp = np.linalg.matrix_power(self.P,n-m)[self.clusters[m],k]
+			for i,node in enumerate(observed_nodes):
+				if observed_links[i]:
+					temp *= self.Q[self.clusters[node],k]
+				else:
+					temp *= 1-self.Q[self.clusters[node],k]
+			OPT.append(temp)
+		return ROB/np.sum(ROB), OPT/np.sum(OPT), MAP/np.sum(MAP)
