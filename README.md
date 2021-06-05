@@ -1,6 +1,6 @@
 # inference-markovian-SBM
 
-This repository provides the code related to the paper: "Reliable Time Prediction in the Markov Stochastic Block Model" under review by the Journal of Computational and Graphical Statistics.
+This repository provides the code related to the paper: "Reliable Time Prediction in the Markov Stochastic Block Model".
 
 ### Description of the project
 
