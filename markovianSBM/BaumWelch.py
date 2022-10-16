@@ -3,6 +3,7 @@ import numpy as np
 import cvxpy as cp
 import os
 import matplotlib.pyplot as plt
+from numpy.core.multiarray import _vec_string
 
 class BaumWelch():
 	"""Class which performs the Baum-Welch algorithm and that uses it to solve the link prediction and the collaborative filtering problems."""
@@ -44,7 +45,7 @@ class BaumWelch():
 					alpha[i,t] = np.sum(alpha[:,m] * puissP[:,i])
 					puissP = puissP @ P
 			# scaling 
-			alpha[:,t] /= np.sum(alpha[:,t])
+			# alpha[:,t] /= np.sum(alpha[:,t])
 		return alpha
 
 	def backward(self, P, O, m, n, delta, Y, K=None):
@@ -71,7 +72,7 @@ class BaumWelch():
 		beta = np.ones((K, n+delta+1))
 		beta[:,n+delta] =  np.ones(K)
 		# scaling 
-		beta[:,n+delta] /= np.sum(beta[:,n+delta])
+		# beta[:,n+delta] /= np.sum(beta[:,n+delta])
 		puissP = P
 		for t in range(n+delta-1,-1,-1):
 			for i in range(K):
@@ -81,7 +82,7 @@ class BaumWelch():
 					beta[i,t] = np.sum(beta[:,n-1] * puissP[i,:]) 
 					puissP = puissP @ P
 			# scaling 
-			beta[:,t] /= np.sum(beta[:,t])
+			# beta[:,t] /= np.sum(beta[:,t])
 		return beta
 
 	def update(self, alpha, beta, P, O, m, n, delta, Y, K=None):
@@ -181,7 +182,7 @@ class BaumWelch():
 			ini, gamma, P, O = self.update(alpha, beta, P, O, m, n, delta, Y)
 		return ini, gamma, P, O
 
-	def collaborative_filtering_robustMAP(self, ini, alpha, beta, O ,observed_links, observed_nodes, m, n):
+	def collaborative_filtering_robustMAP(self, ini, alpha, beta, O, observed_links, observed_nodes, m, n, Pbaum=None):
 		"""
 		Solve robustly the collaborative filtering problem when we observe fully the graph at time m and we want 
 		to predict the community of node n when we observe only a subset of the edges that connects (or not) n
@@ -199,33 +200,36 @@ class BaumWelch():
 		Our implementation do not respect striclty the formula of the paper. We get rid of quantities that do not depend on
 		the cluster k of node n. This allows to avoid underflow issues.
 		"""
+		if Pbaum is None:
+			Pbaum = self.approx_P
 		best_pred = 0
 		best_k = -1
 		indices = np.argsort(observed_nodes)[::-1]
 		observed_nodes = observed_nodes[indices]
 		observed_links = observed_links[indices]
 		ROB = []
-		for k in range(self.K):
-			res =  np.ones(self.K)  # beta[:,observed_nodes[0]]
-			for c in range(self.K):
+		for k in range(self.K): # c_{n}
+			res =  beta[:,observed_nodes[0]] / np.sum(beta[:,observed_nodes[0]])
+			for c in range(self.K):  # c_i
 				if observed_links[0]:
 					res[c] *= self.approx_Q[c,k]
 				else:
 					res[c] *= 1-self.approx_Q[c,k]
 			for i,node in enumerate(observed_nodes[:int(len(observed_links)-1)]):
-				chi = np.zeros((self.K, self.K))
+				chi = np.ones((self.K, self.K))
 				nodei = node
 				nodeim = observed_nodes[i+1]
 				for c in range(self.K): 
 					for cb in range(self.K):
-						chi[c,cb] = self.approx_P[c,cb] * O[cb,self.clusters_approx[nodei]]
-				for step in range(nodei-1,nodeim,-1):
-					chitemp = np.zeros((self.K, self.K))
-					for c in range(self.K): 
-						for cb in range(self.K):
-							for cd in range(self.K):
-								chitemp[c,cb] += self.approx_P[c,cd] * ( O[cd,self.clusters_approx[step]] + chi[cd,cb])
-					chi = np.copy(chitemp)
+						chi[c,cb] = Pbaum[c,cb] * O[cb,self.clusters_approx[nodeim+1]]
+				if (nodeim+1) != nodei:
+					for step in range(nodeim+2,nodei+1):
+						chitemp = np.zeros((self.K, self.K))
+						for c in range(self.K): 
+							for cb in range(self.K):
+								for cd in range(self.K):
+									chitemp[c,cb] += chi[c,cd] * Pbaum[cd,cb] * O[cb,self.clusters_approx[step]]
+						chi = np.copy(chitemp)
 				restemp = np.zeros(self.K)
 				for c in range(self.K):
 					restemp[c] = np.sum(chi[c,:] * res)
@@ -234,7 +238,9 @@ class BaumWelch():
 				else:
 					res = (1-self.approx_Q[:,k]) * restemp 
 			final_pred = np.sum(alpha[:,observed_nodes[-1]] * res)
-			final_pred *= np.sum(ini * (np.linalg.matrix_power(self.approx_P,n))[:,k])
+			vec = [np.sum(ini * (np.linalg.matrix_power(Pbaum,n)[:,r])) for r in range(self.K)]
+			vec /= np.sum(vec)
+			final_pred *= vec[k]
 			ROB.append(final_pred)
 		ROB /= np.sum(ROB)
 		return np.argmax(ROB)
